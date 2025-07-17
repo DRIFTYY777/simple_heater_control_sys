@@ -217,28 +217,8 @@ void readTemp(float &temperature)
   steinhart += 1.0 / (nominalTemperature + 273.15); // + (1/To)
   steinhart = 1.0 / steinhart;                      // Invert
   steinhart -= 273.15;                              // Convert to Celsius
-}
 
-void readTemp2(float &temperature)
-{
-  int adcValue = analogRead(TEMP_SENSOR_PIN);
-
-  // Step 1: Convert ADC value to voltage
-  float voltage = adcValue * (vRef / adcMAX);
-
-  // Step 2: Calculate thermistor resistance
-  float resistance = (seriesResistor * voltage) / (vRef - voltage);
-
-  // Step 3: Apply Beta equation to get temperature in Celsius
-  float steinhart;
-  steinhart = resistance / nominalResistance;       // R/R₀
-  steinhart = log(steinhart);                       // ln(R/R₀)
-  steinhart /= betaCoefficient;                     // ÷ β
-  steinhart += 1.0 / (nominalTemperature + 273.15); // + (1/T₀)
-  steinhart = 1.0 / steinhart;                      // Invert
-  steinhart -= 273.15;                              // Convert Kelvin to Celsius
-
-  temperature = steinhart;
+  temperature = steinhart; // Store the temperature in parameter
 }
 
 /// @brief Initialize PWM for heater bed
@@ -364,10 +344,10 @@ void test2()
 {
   getUserInputsC();
 
-  Serial.println(currentBedTemp);
+  Serial.println(userInputTemp);
   lcd.setCursor(0, 0);
   lcd.print("userTemp: ");
-  lcd.print(currentBedTemp);
+  lcd.print(userInputTemp);
 }
 
 void setup()
@@ -394,21 +374,59 @@ void setup()
 #endif
 }
 
+/*
+  What we have now?
+    1. Readings from the temperature from the heating element in celsius
+    2. Readings from the rotary encoder (0 - 100)
+    3. Readings from the button
+
+  What we need to do?
+    1. Read the temperature from the heating element and do nothing
+    2. Read the user input from the rotary encoder and update the userInputTemp
+    3. Set the heater bed temperature to userInputTemp
+    4. Show the userInputTemp on the LCD
+
+
+*/
+
 void loop()
 {
-  ROTARY_BTN btnState;
-  btnState = readRotaryBtn();
-  getUserInputsC();
+  /*
 
-  // read the current temperature
-  readTemp2(currentBedTemp); // uncomment to use the ADC method
-  Serial.print("Current Bed Temp: ");
-  Serial.println(currentBedTemp);
+  What we need to do?
+    1. Read the temperature from the heating element and do nothing
+    2. Read the user input from the rotary encoder and update the userInputTemp
+    3. Set the heater bed temperature to userInputTemp
+    4. Show the userInputTemp on the LCD
+  */
+
+  readTemp(currentBedTemp);   // Read the current bed temperature
+  getUserInputsC();           // Get the user input from the rotary encoder
+  setPWM(userInputTemp, pwm); // Set the heater bed temperature to userInputTemp
+  // Show the user input temperature on the LCD
   lcd.setCursor(0, 1);
   lcd.print("Bed Temp: ");
-  lcd.print(currentBedTemp);
-  lcd.print(" C");
-
-  delay(50); // delay to avoid too much serial output
-  // test_HAL(); // uncomment to test the HAL
+  if (currentTempUnit == CELSIUS)
+  {
+    lcd.print(currentBedTemp);
+    lcd.print(" C");
+  }
+  else
+  {
+    lcd.print(changeUserInputTemp(currentBedTemp));
+    lcd.print(" F");
+  }
+  lcd.setCursor(0, 0);
+  lcd.print("User Temp: ");
+  if (currentTempUnit == CELSIUS)
+  {
+    lcd.print(userInputTemp);
+    lcd.print(" C");
+  }
+  else
+  {
+    lcd.print(changeUserInputTemp(userInputTemp));
+    lcd.print(" F");
+  }
+  // test_HAL(); // Uncomment to test the rotary encoder and button
 }
