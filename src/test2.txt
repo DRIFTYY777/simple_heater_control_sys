@@ -1,0 +1,131 @@
+#include <Arduino.h>
+#include <math.h>
+#include <Encoder.h>
+
+#define NON_I2C_LCD
+
+#ifdef NON_I2C_LCD
+#include <LiquidCrystal.h>
+// Gpio 2 is used for backlight control
+#else
+#include <LiquidCrystal_I2C.h>
+#endif
+
+/* Pins defines */
+#define TEMP_SENSOR_PIN A0
+#define SET_HEATER_BED_PIN 9
+#define LED_PIN 3
+#define ROTARY_A_PIN 6
+#define ROTARY_B_PIN 8
+#define ROTARY_BTN_PIN 5
+#define SDA_PIN PC4
+#define SCL_PIN PC5
+
+#ifdef NON_I2C_LCD
+LiquidCrystal lcd(A1, A2, A3, A4, A5, 4); // Change the pins as per your LCD
+#else
+// Change the address and size as per your LCD
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+#endif
+
+Encoder rotaryEncoder(ROTARY_A_PIN, ROTARY_B_PIN);
+
+// Thermistor parameters
+const float seriesResistor = 10000.0;    // 10k Ohm
+const float nominalResistance = 10000.0; // 10k Ohm at 25 degrees Celsius
+const float nominalTemperature = 25.0;   // Nominal temperature in Celsius
+const float bCoefficient = 3950.0;       // Beta coefficient for the thermistor
+
+// control parameters
+int targetTemperature = 60;     // Target temperature in Celsius
+int lastTargetTemperature = -1; // Last target temperature
+
+void initLCD()
+{
+// initialize the LCD
+#ifdef NON_I2C_LCD
+    lcd.begin(16, 2);
+    lcd.clear();
+    /*
+      This library "LiquidCrystal" isn't supporting backlight, custom driver must
+      be written to drive backlight or directly connect to 3.3v.
+    */
+    // crude backlight driver
+    pinMode(2, OUTPUT); // GPIO2
+    digitalWrite(2, HIGH);
+#else
+    lcd.init();
+    lcd.clear();
+    lcd.backlight();
+#endif
+}
+
+float readTemperature()
+{
+    int analogValue = analogRead(TEMP_SENSOR_PIN);
+    float resistance = seriesResistor / ((1023.0 / analogValue) - 1.0);
+    float steinhart;
+    steinhart = resistance / nominalResistance;       // (R/Ro)
+    steinhart = log(steinhart);                       // ln(R/Ro)
+    steinhart /= bCoefficient;                        // 1/B * ln(R/Ro)
+    steinhart += 1.0 / (nominalTemperature + 273.15); // + (1/To)
+    steinhart = 1.0 / steinhart;                      // Invert
+    steinhart -= 273.15;                              // Convert to Celsius
+    return steinhart;
+}
+
+void setup()
+{
+
+    initLCD();
+
+    pinMode(TEMP_SENSOR_PIN, INPUT);
+    pinMode(ROTARY_BTN_PIN, INPUT_PULLUP);
+    pinMode(SET_HEATER_BED_PIN, OUTPUT);
+
+    rotaryEncoder.write(targetTemperature * 4); // Initialize encoder position
+
+    lcd.setCursor(0, 1);
+    lcd.print("PRESET T: ");
+    lcd.setCursor(0, 0);
+    lcd.print("ACTUAL T:");
+}
+
+int lastPrintTime = 0;
+
+void loop()
+{
+
+    int newTargetTemperature = rotaryEncoder.read() / 4; // Convert encoder position to temperature
+
+    if (newTargetTemperature != lastTargetTemperature)
+    {
+        targetTemperature = constrain(newTargetTemperature, 0, 100); // Constrain to a reasonable range
+        rotaryEncoder.write(targetTemperature * 4);                  // Update encoder position
+    }
+
+    float currentTemperature = readTemperature();
+
+    if (millis() - lastTargetTemperature - lastPrintTime > 1000) // Update every second
+    {
+        lastPrintTime = millis();
+        lcd.setCursor(0, 0);
+        lcd.print("ACTUAL T: ");
+        lcd.print(currentTemperature, 1); // Print with one decimal place
+        lcd.print(" C   ");
+
+        lcd.setCursor(0, 1);
+        lcd.print("PRESET T: ");
+        lcd.print(targetTemperature);
+        lcd.print(" C   ");
+
+        if (newTargetTemperature < 20)
+        {
+            digitalWrite(SET_HEATER_BED_PIN, LOW); // Turn on heater
+            lcd.setCursor(0, 1);
+            lcd.print("HEATING... Off");
+        }
+    }
+
+    delay(50); // Debounce delay
+}
