@@ -188,12 +188,15 @@ void readRotary(int *a, int *b)
   
   prevA = enc_a;
   prevB = enc_B;
+
+  Serial.print("Rotary is initialized");
 }
 
 /// @brief Read Button state
 /// @note long press time can be config by chaning howLong
 /// @note And there more space for improvement double click, triple click etc
 /// @return button state (PRESSED, RELEASED, LONG_PRESSED)
+/// @extends This function can be extende for more features like double click, triple click
 ROTARY_BTN readRotaryBtn()
 {
   static unsigned int howLong = 1000; // how long button should be pressed for regester
@@ -251,6 +254,8 @@ void initLCD()
   lcd.clear();
   lcd.backlight();
 #endif
+
+  Serial.print("LCD is initialized");
 }
 
 /// @brief Control display backlight and state
@@ -392,16 +397,13 @@ void initPWM()
   // Update frequency tracking
   currentPWMFrequency = 16000000.0 / (256.0 * (1 + ICR1));
   
-  Serial.print("PWM initialized on pin ");
-  Serial.print(SET_HEATER_BED_PIN);
-  Serial.print(" with frequency: ");
-  Serial.print(currentPWMFrequency, 1);
-  Serial.println(" Hz");
+  Serial.print("PWM initialized is Initialized ");
+
 }
 
 /// @brief Set PWM frequency (optional - for advanced users)
 /// @param frequency Desired PWM frequency in Hz
-/// @note This function allows changing PWM frequency if needed
+/// @note This function allows changing PWM frequency if needed (Depends on drivers)
 void setPWMFrequency(float frequency)
 {
   if (frequency < 50 || frequency > 1000) {
@@ -431,13 +433,6 @@ void setPWMFrequency(float frequency)
   Serial.println(" Hz");
 }
 
-/// @brief Get current PWM frequency
-/// @return Current PWM frequency in Hz
-float getPWMFrequency()
-{
-  return currentPWMFrequency;
-}
-
 /// @brief Set PWM using duty cycle percentage (0-100%)
 /// @param dutyCyclePercent Duty cycle percentage (0-100)
 /// @note This is the recommended way to set PWM for heating control
@@ -462,11 +457,6 @@ void setPWMDutyCycle(int dutyCyclePercent)
   if (abs(dutyCyclePercent - lastDutyCycle) > 2) {
     Serial.print("PWM Duty Cycle: ");
     Serial.print(dutyCyclePercent);
-    Serial.print("% (OCR1A: ");
-    Serial.print(ocrValue);
-    Serial.print("/");
-    Serial.print(ICR1);
-    Serial.println(")");
     lastDutyCycle = dutyCyclePercent;
   }
 }
@@ -481,8 +471,8 @@ void setPWMDutyCycle(int dutyCyclePercent)
  * 
  *         |---------------------|          |-----------------|          |---------
  *         |                     |          |                 |          |
- * _______|                     |----------|                 |----------|
- *            50% Duty Cycle                 40% Duty Cycle
+ * ________|                     |----------|                 |----------|
+ *            50% Duty Cycle                   40% Duty Cycle
  * 
  * - Higher duty cycle = more power = more heating
  * - Lower duty cycle = less power = less heating
@@ -505,28 +495,9 @@ void setPWM(int value, int dutyCycle = 0)
   setPWMDutyCycle(finalDutyCycle);
 }
 
-/// @brief Get current PWM status information
-/// @note Useful for debugging and monitoring
-void getPWMStatus()
-{
-  Serial.println("=== PWM Status ===");
-  Serial.print("Frequency: ");
-  Serial.print(currentPWMFrequency, 1);
-  Serial.println(" Hz");
-  Serial.print("Duty Cycle: ");
-  Serial.print(currentDutyCycle);
-  Serial.println("%");
-  Serial.print("OCR1A: ");
-  Serial.print(OCR1A);
-  Serial.print("/");
-  Serial.println(ICR1);
-  Serial.print("Legacy PWM Value: ");
-  Serial.println(pwmValue);
-  Serial.println("==================");
-}
-
 /// @brief  Get the user inputs from rotary encoder
 /// @note  This function will read the rotary encoder and update the rotaryValue (27-150)
+/// @param  (userInputTemp) is float global variable that will be updated based on rotaryValue
 void getUserInputs()
 {
   int a, b;
@@ -704,7 +675,6 @@ void updateDisplay()
       break;
   }
 
-  // Second line: Current temperature and heating status
   lcd.setCursor(0, 1);
   lcd.print("Curr:");
   lcd.print(currentBedTemp, 1);
@@ -734,7 +704,8 @@ void updateDisplay()
   lastDisplayUpdate = currentTime;
 }
 
-/// @brief Update serial output only when needed
+///@brief Update serial output only when needed
+///@brief for debugging and monitoring
 void updateSerial()
 {
   unsigned long currentTime = millis();
@@ -822,7 +793,7 @@ void setup()
     Because there are some kind of room temperature
     This is just a hack to avoid the system to set the bed temperature to 0
   */
-  readTemp(defaultBedTemp);
+  readTemp(defaultBedTemp); // for future use
 
   // Initialize LED pin
   pinMode(LED_PIN, OUTPUT);
@@ -845,32 +816,13 @@ void setup()
   
   delay(2000); // Show startup message for 2 seconds
   lcd.clear();
-  
-  Serial.println("System Ready!");
-  Serial.print("PWM Frequency: ");
-  Serial.print(currentPWMFrequency, 1);
-  Serial.println(" Hz");
-  Serial.println("Rotary Range: 0-26 = OFF, 27-150 = ON (30-150°C)");
-  Serial.println("Button: Short press = Display ON/OFF, Long press = Wake from sleep");
-  Serial.println("Commands: Send 'pwm_status' for PWM info");
+
+
+  Serial.println("Simple Heater Control System Started!");
 }
 
 void loop()
 {
-  // Check for serial commands
-  if (Serial.available() > 0) {
-    String command = Serial.readString();
-    command.trim();
-    
-    if (command == "pwm_status") {
-      getPWMStatus();
-    }
-    else if (command.startsWith("pwm_freq ")) {
-      float freq = command.substring(9).toFloat();
-      setPWMFrequency(freq);
-    }
-  }
-  
   // Read current temperature
   readTemp(currentBedTemp);
   
