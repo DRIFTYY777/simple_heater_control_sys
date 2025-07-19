@@ -79,8 +79,8 @@ int minRotaryValue = 27;   // Minimum rotary value (OFF below this)
 int maxRotaryValue = 150;  // Maximum rotary value
 
 /* Safety Settings */
-const float maxBoardTemp = 160.0;  // Maximum board temperature to prevent overheating
-const float tempTolerance = 2.0;  // Temperature tolerance for maintaining target
+constexpr float maxBoardTemp = 160.0;  // Maximum board temperature to prevent overheating
+constexpr float tempTolerance = 2.0;  // Temperature tolerance for maintaining target
 
 /* Setting for Temperature in Fahrenheit  For future use */
 int minTempF = (minTempC * 9.0 / 5.0) + 32;
@@ -105,8 +105,8 @@ unsigned long lastSerialUpdate = 0;
 unsigned long lastActivityTime = 0;  // For display sleep timeout
 unsigned long displaySleepTimeout = 30000;  // 30 seconds of inactivity
 
-const unsigned long displayUpdateInterval = 500;  // Update display every 500ms
-const unsigned long serialUpdateInterval = 150;   // Update serial every 150ms for rotary feedback
+constexpr unsigned long displayUpdateInterval = 500;  // Update display every 500ms
+constexpr unsigned long serialUpdateInterval = 150;   // Update serial every 150ms for rotary feedback
 
 /* Previous values for change detection */
 int prevUserInputTemp = -1;
@@ -156,6 +156,8 @@ void initRotaryEncoder()
   /* Read and store the current value of rotary */
   prevA = digitalRead(ROTARY_A_PIN);
   prevB = digitalRead(ROTARY_B_PIN);
+  Serial.println("Rotary is initialized");
+
 }
 
 /// @brief Read the rotary encoder with improved debouncing
@@ -189,7 +191,6 @@ void readRotary(int *a, int *b)
   prevA = enc_a;
   prevB = enc_B;
 
-  Serial.print("Rotary is initialized");
 }
 
 /// @brief Read Button state
@@ -255,7 +256,7 @@ void initLCD()
   lcd.backlight();
 #endif
 
-  Serial.print("LCD is initialized");
+  Serial.println("LCD is initialized");
 }
 
 /// @brief Control display backlight and state
@@ -397,7 +398,7 @@ void initPWM()
   // Update frequency tracking
   currentPWMFrequency = 16000000.0 / (256.0 * (1 + ICR1));
   
-  Serial.print("PWM initialized is Initialized ");
+  Serial.println("PWM initialized is Initialized ");
 
 }
 
