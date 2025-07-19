@@ -77,7 +77,7 @@ A precise Arduino-based temperature control system with rotary encoder interface
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/yourusername/simple_heater_control_sys.git
+git clone https://github.com/DRIFTYY777/simple_heater_control_sys.git
 cd simple_heater_control_sys
 ```
 
@@ -172,29 +172,6 @@ Line 2: Target: XXX°C [ON/OFF]
 - Invalid temperature reading protection
 - System state monitoring
 
-## 🔧 Troubleshooting
-
-### Common Issues
-
-**Display not working:**
-- Check LCD type configuration (#define NON_I2C_LCD)
-- Verify power connections (5V/3.3V)
-- Confirm I2C address (default: 0x27)
-
-**Temperature reading incorrect:**
-- Verify thermistor connections
-- Check series resistor value (10kΩ)
-- Calibrate beta coefficient for your thermistor
-
-**Rotary encoder not responding:**
-- Ensure pull-up resistors are enabled
-- Check debounce settings
-- Verify pin connections
-
-**Heating not working:**
-- Test MOSFET/relay operation
-- Check PWM output on pin 9
-- Verify heater element continuity
 
 ### Serial Debug
 Connect to serial monitor at 9600 baud for debugging information:
@@ -203,17 +180,6 @@ Connect to serial monitor at 9600 baud for debugging information:
 - System state changes
 - PWM duty cycle
 
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 👨‍💻 Author
 
@@ -249,19 +215,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ![Circuit Schematic](schematics/Schematic_simple_heater_control_system.png)
 *Detailed circuit diagram showing all connections and component values*
 
-### Video Demonstration
-![System Demo](images/VID-20250718-WA0001.mp4)
-*Video demonstration of the system in operation*
-
 ### Technical Documentation
 - [Complete Circuit Schematic (PDF)](schematics/Schematic_simple_heater_control_system.pdf)
 - [Hardware Assembly Guide](docs/assembly-guide.md)
 - [Software Configuration Manual](docs/configuration.md)
 
 ---
-
-⭐ **Star this repository if you found it helpful!**
-
-📧 **Questions?** Open an issue or contact the author.
-
-🔧 **Want to contribute?** Check out our [Contributing Guidelines](CONTRIBUTING.md).
