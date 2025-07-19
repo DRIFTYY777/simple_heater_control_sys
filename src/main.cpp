@@ -21,7 +21,6 @@
 #include <LiquidCrystal_I2C.h>
 #endif
 
-
 /* Pins defines */
 #define TEMP_SENSOR_PIN A0
 #define SET_HEATER_BED_PIN 9
@@ -46,7 +45,8 @@ enum SYSTEM_STATE
 {
   OFF = 0,
   ON = 1,
-  OVERHEAT = 2
+  OVERHEAT = 2,
+  STANDBY = 3,
 };
 
 /* Display States */
@@ -56,6 +56,7 @@ enum DISPLAY_STATE
   DISPLAY_ON = 1,
   DISPLAY_SLEEP = 2
 };
+
 
 /* States of RotaryEncoder */
 int prevA = -1;
@@ -113,10 +114,6 @@ int prevUserInputTemp = -1;
 int prevRotaryValue = -1;
 float prevCurrentBedTemp = -1;
 
-/* Previous states for change detection */
-SYSTEM_STATE prevSystemState = OFF;
-DISPLAY_STATE prevDisplayState = DISPLAY_OFF;
-
 /*
  * PWM config defines
  */
@@ -124,6 +121,10 @@ int pwmValue = 0;
 float currentPWMFrequency = 490.0;  // Default Arduino PWM frequency for pin 9
 int currentDutyCycle = 0;           // Current duty cycle percentage (0-100)
 
+
+/* Previous states for change detection */
+SYSTEM_STATE prevSystemState = OFF;
+DISPLAY_STATE prevDisplayState = DISPLAY_OFF;
 
 
 /**
